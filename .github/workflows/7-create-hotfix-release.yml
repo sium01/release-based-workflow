@@ -1,62 +1,48 @@
-name: Step 7, Create release v1.0.1
+name: Step 7 - Create Release v1.0.1
 
-# This step triggers after 6-commit-hotfix.yml.
-# This workflow updates from step 7 to step X.
-
-# This will run when a release is published.
-# Reference: https://docs.github.com/en/actions/learn-github-actions/events-that-trigger-workflows
+# Trigger on manual run or when a release is published
 on:
   workflow_dispatch:
   release:
     types: [published]
 
-# Reference: https://docs.github.com/en/actions/security-guides/automatic-token-authentication
+# Allow GitHub Actions to write contents (needed for updating files)
 permissions:
   contents: write
 
 jobs:
-  # Get the current step to only run the main job when the learner is on the same step.
   get_current_step:
     name: Check current step number
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+
       - id: get_step
         run: |
-          echo "current_step=$(cat ./.github/steps/-step.txt)" >> $GITHUB_OUTPUT
+          current=$(cat ./.github/steps/-step.txt)
+          echo "current_step=$current" >> $GITHUB_OUTPUT
     outputs:
       current_step: ${{ steps.get_step.outputs.current_step }}
 
   on_hotfix_release_published:
-    name: On hotfix release v1.0.1 published
+    name: Handle release v1.0.1
     needs: get_current_step
-
-    # We will only run this action when:
-    # 1. This repository isn't the template repository.
-    # 2. The step is currently 7.
-    # 3. The tag for the published release is v1.0.1
-    # Reference: https://docs.github.com/en/actions/learn-github-actions/contexts
-    # Reference: https://docs.github.com/en/actions/learn-github-actions/expressions
     if: >-
-      ${{ !github.event.repository.is_template
-          && needs.get_current_step.outputs.current_step == 7
-          && github.ref_name == 'v1.0.1' }}
-
-    # We'll run Ubuntu for performance instead of Mac or Windows.
+      ${{ !github.event.repository.is_template &&
+          needs.get_current_step.outputs.current_step == '7' &&
+          github.ref_name == 'v1.0.1' }}
     runs-on: ubuntu-latest
 
     steps:
-      # We'll need to check out the repository so that we can edit the README.
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Update README from step 7 to step X.
-      - name: Update to finish
+      - name: Update README for next step
         uses: skills/action-update-step@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           from_step: 7
-          to_step: X
+          to_step: 8 # ⬅️ Replace with actual next step number or "finish"
